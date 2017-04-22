@@ -2,6 +2,7 @@
 (specify File (extend Event-emitter.prototype))
 
 (describe File
+          (init (path fs))
 
 
           (gett value (read-file this.path))

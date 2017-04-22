@@ -9,6 +9,15 @@
 
 ;
 var R = require("ramda");
+var Descriptions = {  };
+var R = require("ramda");
+var { 
+  create,
+  extend,
+  mixin,
+  cond,
+  partiallyApplyAfter
+ } = require("kit/js/util");
 var R = require("ramda"),
     assert = require("assert"),
     { 
@@ -234,6 +243,12 @@ var File = extend(EventEmitter.prototype, {
   symbol:Symbol("File")
  });
 mixin({ 
+  init( path = this.path,fs = this.fs ){ 
+    
+      this.path = path;this.fs = fs;
+      return this;
+    
+   },
   get value(  ){ 
     
       return readFile(this.path);
@@ -310,13 +325,6 @@ var Directory = extend(EventEmitter.prototype, {
   symbol:Symbol("Directory")
  });
 mixin({ 
-  init( path = this.path,fs = this.fs ){ 
-    
-      this.path = path;this.fs = fs;
-      EventEmitter.call(this);
-      return this;
-    
-   },
   set( path = this.path,value = this.value,type = File ){ 
     
    },

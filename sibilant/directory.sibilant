@@ -2,7 +2,6 @@
 (specify Directory (extend Event-emitter.prototype))
 
 (describe Directory
-          (init (path fs) (.call Event-emitter this))
 
 
           (def-generic set (path value ( type File ) ))
