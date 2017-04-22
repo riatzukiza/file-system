@@ -56,7 +56,37 @@ var onceThen = (function onceThen$(event, emitter) {
   
   }));
 });
-var testing__QUERY = true;
+var fmap = R.curry((f, a) => {
+	
+  return a.map(f);
+
+});
+var is = { 
+  string( v ){ 
+    
+      return typeof v === "string";
+    
+   }
+ };
+is.empty__QUERY = (function is$empty__QUERY$(value) {
+  /* is.empty? sibilant/index.sibilant:12:0 */
+
+  return 0 === value.length;
+});
+var athrow = (function athrow$(errType, message) {
+  /* athrow sibilant/index.sibilant:14:0 */
+
+  return () => {
+  	
+    return (new errType(message));
+  
+  };
+});
+var getValueOf = (function getValueOf$(o) {
+  /* get-value-of sibilant/index.sibilant:17:0 */
+
+  return o.getValue();
+});
 const Tree={ 
   symbol:Symbol("Tree")
  };
@@ -194,6 +224,17 @@ mixin({
     
    }
  }, TreeMap);
+const PathTree={ 
+  symbol:Symbol("PathTree")
+ };
+Descriptions.PathTree = mixin({ 
+  init( _tree = create(TreeMap)() ){ 
+    
+      this._tree = _tree;
+      return this;
+    
+   }
+ }, PathTree);
 var fs = require("fs"),
     Path = require("path"),
     chokidar = require("chokidar"),
@@ -203,14 +244,8 @@ var fs = require("fs"),
 var File = extend(EventEmitter.prototype, { 
   symbol:Symbol("File")
  });
+console.log("FILE?", FILE);
 mixin({ 
-  init( path = this.path,fs = this.fs ){ 
-    
-      this.path = path;this.fs = fs;
-      EventEmitter.call(this);
-      return this;
-    
-   },
   get value(  ){ 
     
       return readFile(this.path);
@@ -218,7 +253,25 @@ mixin({
    },
   set value( v ){ 
     
-      return writeFile(this.path, v);
+      return Promise.resolve(v).then((v) => {
+      	
+        return writeFile(this.path, v);
+      
+      });
+    
+   },
+  get string(  ){ 
+    
+      return readFile(this.path, "utf8");
+    
+   },
+  set string( s ){ 
+    
+      return Promise.resolve(s).then((s) => {
+      	
+        return writeFile(this.path, "utf8", s);
+      
+      });
     
    },
   getValue( path = this.path ){ 
@@ -276,29 +329,10 @@ mixin({
       return this;
     
    },
-  setValue( value = [],path = this.path ){ 
-    
-      return (function() {
-        if ((value && "object" === typeof value && "Array" === value.constructor.name)) {
-          return Promise.all(value.map((k) => {
-          	
-            return mkdir(Path.join(path, k));
-          
-          })).then((nil) => {
-          	
-            return this;
-          
-          });
-        } else {
-          return mkdir(Path.join(path, value));
-        }
-      }).call(this);
-    
-   },
-  getValue( path = this.path ){ 
-    
-   },
   set( path = this.path,value = this.value,type = File ){ 
+    
+   },
+  get(  ){ 
     
    },
   insert( path = this.path,type = File ){ 
@@ -317,11 +351,11 @@ mixin({
    },
   get children(  ){ 
     
-      return this.keys.map((k) => {
+      return this.keys.then(fmap((k) => {
       	
         return Path.join(this.path, k);
       
-      });
+      }));
     
    }
  }, Directory);
@@ -340,7 +374,7 @@ var FileSystem = extend(EventEmitter.prototype, {
   symbol:Symbol("FileSystem")
  });
 var plift = (function plift$(f) {
-  /* plift sibilant/file-system.sibilant:73:0 */
+  /* plift sibilant/file-system.sibilant:15:0 */
 
   return (...args) => {
   	
@@ -370,7 +404,7 @@ var stat = plift(fs.stat),
     writeFile = plift(fs.writeFile),
     readdir = plift(fs.readdir);
 var fillSubDir = (function fillSubDir$(p_subPath$1, seg) {
-  /* fill-sub-dir sibilant/file-system.sibilant:83:0 */
+  /* fill-sub-dir sibilant/file-system.sibilant:25:0 */
 
   var p = p_subPath$1[0],
       subPath = p_subPath$1[1];
@@ -390,8 +424,24 @@ var _directory__QUERY = (stats) => {
   return stats.isDirectory();
 
 };
+var emit = R.invoker(3, "emit");
 var biCurry = R.curryN(2);
 var _ = R._;
+var notSingleDot = (token) => {
+	
+  return !(token === ".");
+
+},
+    findValue = (seq, _tree) => {
+	
+  return _tree.find(seq).value;
+
+},
+    tokenize = ($fpipe) => {
+	
+  return $fpipe.split("/").filter(notSingleDot);
+
+};
 mixin({ 
   init( root = this.root,_tree = create(TreeMap)() ){ 
     
@@ -399,11 +449,7 @@ mixin({
       return this;
     
    },
-  find( path = this.path,_tree = this._tree,seq = path.split("/").filter((token) => {
-  	
-    return !(token === ".");
-  
-  }),node = _tree.find(seq).value,fs = this ){ 
+  find( path = this.path,_tree = this._tree,seq = tokenize(path),node = findValue(seq, _tree),fs = this ){ 
     
       return (function() {
         if (node) {
@@ -420,11 +466,7 @@ mixin({
       	
         chokidar.watch(path).on("all", (eventName, path, stats) => {
         	
-          return fs.find(Path.relative(fs.root, path)).then((r) => {
-          	
-            return node.emit(eventName, r);
-          
-          });
+          return fs.find(Path.relative(fs.root, path)).then(emit(node, eventName));
         
         }).once("error", (err) => {
         	
@@ -453,7 +495,7 @@ mixin({
             
             });
           })(seq.pop());
-        })(path.split("/"));
+        })(tokenize(path));
       
       });
     
@@ -468,4 +510,142 @@ mixin({
     
    }
  }, FileSystem);
+(function() {
+  if (testing__QUERY) {
+    return (function(fileSystem) {
+      /* node_modules/kit/inc/macros.sibilant:165:9 */
+    
+      return Promise.resolve().then((nil) => {
+      	
+        var message = "should get files that exist with in this project from the project root";
+        console.log(message);
+        return fileSystem.find(".").then((function(b, ...others) {
+          /* node_modules/kit/inc/console.sibilant:10:8 */
+        
+          console.log("found current directory", b, ...others);
+          return b;
+        }));
+      
+      }).then((nil) => {
+      	
+        var message = "file created by an insert should be empty";
+        console.log(message);
+        return fileSystem.insert("./empty.txt").then(getValueOf).then(cond(is.empty__QUERY, (function(b, ...others) {
+          /* node_modules/kit/inc/console.sibilant:10:8 */
+        
+          console.log("inserted successfully", b, ...others);
+          return b;
+        }), athrow(RangeError, "inserted file is not empty")));
+      
+      }).then((nil) => {
+      	
+        var message = "should create a file if it doesn't exist, and fill it with the second argument";
+        console.log(message);
+        return fileSystem.set("./hello.txt", "hello world").then((function(b, ...others) {
+          /* node_modules/kit/inc/console.sibilant:10:8 */
+        
+          console.log("checking value of setted file", b, ...others);
+          return b;
+        })).then(getValueOf).then(cond(R.pipe(R.toString, R.equals("hello world")), (function(b, ...others) {
+          /* node_modules/kit/inc/console.sibilant:10:8 */
+        
+          console.log("setted successfuly", b, ...others);
+          return b;
+        }), athrow(TypeError, "setted value is not correct")));
+      
+      }).then((nil) => {
+      	
+        var message = "find always returns the same node for the same file";
+        console.log(message);
+        return Promise.all([ fileSystem.find("./sibilant/index.sibilant"), fileSystem.find("./sibilant/index.sibilant") ]).then(cond(R.apply(R.equals), (function(b, ...others) {
+          /* node_modules/kit/inc/console.sibilant:10:8 */
+        
+          console.log("files are the same", b, ...others);
+          return b;
+        }), athrow(Error, "found files are not the same")));
+      
+      }).then((nil) => {
+      	
+        var message = "watch events for the same file, consistantly return the same node";
+        console.log(message);
+        return fileSystem.watch("./hello.txt").then((node) => {
+        	
+          return [ onceThen("add", node), node ];
+        
+        }).then(cond(R.apply(R.equals), (function(b, ...others) {
+          /* node_modules/kit/inc/console.sibilant:10:8 */
+        
+          console.log("same node for watcher", b, ...others);
+          return b;
+        }), athrow(Error, "once then did not return the right node")));
+      
+      }).then((nil) => {
+      	
+        var message = "Changing the value of a file node, will trigger a change event on the file system";
+        console.log(message);
+        return fileSystem.watch("./hello.txt").then(R.curry(onceThen)("add")).then((node) => {
+        	
+          node.on("change", (function(b, ...others) {
+            /* node_modules/kit/inc/console.sibilant:10:8 */
+          
+            console.log("a file changed", b, ...others);
+            return b;
+          }));
+          timeout(1000).then((nil) => {
+          	
+            return node.value = "more hello, and now you know";
+          
+          });
+          return Promise.race([ timeout(5000).then((nil) => {
+          	
+            throw (new Error("took too long, assuming that change event will not fire"))
+          
+          }), onceThen("change", node) ]);
+        
+        }).then((function(b, ...others) {
+          /* node_modules/kit/inc/console.sibilant:10:8 */
+        
+          console.log("file change event successfully fired", b, ...others);
+          return b;
+        }));
+      
+      }).then((nil) => {
+      	
+        var message = "Empty directories will be created along a path if they do not exist when inserting a file.";
+        console.log(message);
+        return 1;
+      
+      }).then((nil) => {
+      	
+        var message = "Directories are itteratable";
+        console.log(message);
+        return fileSystem.get(".").then(feach((function(b, ...others) {
+          /* node_modules/kit/inc/console.sibilant:10:8 */
+        
+          console.log("lookin at a dir", b, ...others);
+          return b;
+        })));
+      
+      }).then((nil) => {
+      	
+        var message = "Directories can be mapped";
+        console.log(message);
+        return fileSystem.get(".").then(fmap(getPath)).then(cond(R.all(is.string)));
+      
+      }).then((nil) => {
+      	
+        var message = "Elements can be gotten relative to a given directory";
+        console.log(message);
+        return ;
+      
+      }).catch((function(b, ...others) {
+        /* node_modules/kit/inc/console.sibilant:10:8 */
+      
+        console.log("failed filesystem unit tests", b, ...others);
+        return b;
+      }));
+    })(create(FileSystem)("."));
+  }
+}).call(this);
 exports.FileSystem = FileSystem;
+exports.File = File;
