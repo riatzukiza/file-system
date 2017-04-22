@@ -1,12 +1,17 @@
 
 (specify File (extend Event-emitter.prototype))
+(export File)
 
 (describe File
-          (init (path fs) (.call Event-emitter this))
 
 
           (gett value (read-file this.path))
-          (sett value v (write-file this.path v))
+          (sett value v (then (Promise.resolve v) v
+                              (write-file this.path v)))
+
+          (gett string (read-file this.path "utf8"))
+          (sett string s (then (Promise.resolve s) s
+                               (write-file this.path "utf8" s)))
 
           (def-generic get-value (path)
             (read-file path))

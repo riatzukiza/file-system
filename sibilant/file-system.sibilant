@@ -63,7 +63,7 @@
           (def-generic insert (path ( type File ) (fs this))
             (catch (.find fs path)
 
-              (let* ((seq (.split path "/"))
+              (let* ((seq (tokenize path))
                      (file-name (.pop seq)))
 
                 (then-do (first (.reduce seq fill-sub-dir [(Promise.resolve) "./"]))

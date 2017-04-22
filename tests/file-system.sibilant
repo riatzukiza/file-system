@@ -49,12 +49,13 @@
           ;;                (then keys (if (empty? keys)
           ;;                               (print "directory inserted successfully")
           ;;                               (throw (new Range-error "inserted directory should be empty"))))))
-          (p-test (.watch file-system "./hello.txt") "watch events for the same file, consistantly return the same node"
-                  (then node [(once-then "add" node) node])
+          (p-test  "watch events for the same file, consistantly return the same node"
+                   (.watch file-system "./hello.txt")
+                   (then node [(once-then "add" node) node])
 
-                  (.then (cond (R.apply R.equals)
-                               (aprint "same node for watcher" )
-                               (athrow  Error "once then did not return the right node"))))
+                   (.then (cond (R.apply R.equals)
+                                (aprint "same node for watcher" )
+                                (athrow  Error "once then did not return the right node"))))
 
           (p-test  "Changing the value of a file node, will trigger a change event on the file system"
 
