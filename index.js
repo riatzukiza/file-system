@@ -272,7 +272,7 @@ mixin({
     
       return Promise.resolve(s).then((s) => {
       	
-        return writeFile(this.path, "utf8", s);
+        return writeFile(this.path, s);
       
       });
     

@@ -11,7 +11,7 @@
 
           (gett string (read-file this.path "utf8"))
           (sett string s (then (Promise.resolve s) s
-                               (write-file this.path "utf8" s)))
+                               (write-file this.path  s)))
 
           (def-generic get-value (path)
             (read-file path))
