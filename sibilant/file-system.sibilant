@@ -1,0 +1,79 @@
+(require! "fs" Path "path" "chokidar" (lit Event-emitter) "events")
+
+(include "./file" "./directory")
+
+
+(def-curried discover-node  (path seq *tree fs stats)
+  (.set *tree seq
+        (if (.is-directory stats)
+            ( (create Directory) path )
+            ( (create File) path))))
+
+
+(specify File-system (extend Event-emitter.prototype))
+
+(def plift (f)
+  (promised ((dots args))
+            (.apply f this [ (dots args) (=> (err data) (if err (reject err) (resolve data))) ])))
+
+(var stat (plift fs.stat)
+     mkdir (plift fs.mkdir)
+     read-file (plift fs.read-file)
+     write-file (plift fs.write-file )
+     readdir (plift fs.readdir))
+
+(def fill-sub-dir ([p sub-path] seg) [ (catch (then-do p (mkdir sub-path))) (Path.join sub-path seg) ])
+
+
+(var *directory? (=> (stats) (.is-directory stats)))
+
+(var emit (R.invoker 3 "emit"))
+
+(var bi-curry (R.curry-n 2 ))
+(var _ R._)
+
+;; (var *discover-type (cond (R.pipe R.head directory?)
+;;                           (R.pipe (nth 1) (create Directory))
+;;                           (R.pipe (nth 1) (create File))))
+;; (var *discover-node (bi-curry (R.unapply (R.pipe (.set *tree seq) *discover-type) )))
+
+
+(macro fpipe (...body)
+       `(=> ($fpipe)
+            (pipe $fpipe ...@body)))
+
+(var not-single-dot (=> (token) (not (= token ".")))
+     find-value (=> (seq *tree) (get (.find *tree seq) 'value))
+     tokenize (fpipe (.split  "/") (.filter  not-single-dot)))
+
+(describe File-system
+          (init (root (*tree ((create Tree-map) ))))
+
+          (def-generic find (path *tree (seq (tokenize path)) (node (find-value seq *tree)) (fs this))
+            (if node
+                (.resolve Promise node)
+                (.then (stat path)
+                       (discover-node path seq *tree fs))))
+
+          (def-generic watch (path (fs this))
+            (then (.find fs path) node
+                  (on (.watch chokidar path) 'all (event-name path stats)
+                      (.then (.find fs (.relative Path fs.root path)) (emit node event-name ))) node))
+
+          (def-generic insert (path ( type File ) (fs this))
+            (catch (.find fs path)
+
+              (let* ((seq (.split path "/"))
+                     (file-name (.pop seq)))
+
+                (then-do (first (.reduce seq fill-sub-dir [(Promise.resolve) "./"]))
+                         (.set-value ((create type) path fs)  )))))
+
+          (def-generic set (path v ( type File ) (fs this))
+
+            (then (.insert fs path type fs) node (.set-value node v))))
+
+
+
+
+
