@@ -224,17 +224,6 @@ mixin({
     
    }
  }, TreeMap);
-const PathTree={ 
-  symbol:Symbol("PathTree")
- };
-Descriptions.PathTree = mixin({ 
-  init( _tree = create(TreeMap)() ){ 
-    
-      this._tree = _tree;
-      return this;
-    
-   }
- }, PathTree);
 var fs = require("fs"),
     Path = require("path"),
     chokidar = require("chokidar"),
