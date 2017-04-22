@@ -233,7 +233,6 @@ var fs = require("fs"),
 var File = extend(EventEmitter.prototype, { 
   symbol:Symbol("File")
  });
-console.log("FILE?", FILE);
 mixin({ 
   get value(  ){ 
     

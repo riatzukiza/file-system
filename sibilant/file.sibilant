@@ -1,7 +1,6 @@
 
 (specify File (extend Event-emitter.prototype))
 
-(print "FILE?" FILE)
 (describe File
 
 
