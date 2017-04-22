@@ -1,6 +1,5 @@
 
 (specify File (extend Event-emitter.prototype))
-(export File)
 
 (describe File
 

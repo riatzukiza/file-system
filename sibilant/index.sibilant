@@ -7,10 +7,7 @@
 
 
 (def-curried fmap (f a) (.map a f))
-(var is (lit
-
-         (def string (v) (string? v))
-         ))
+(var is (lit (def string (v) (string? v))))
 
 (def is.empty? (value)
   (empty? value))
@@ -30,3 +27,4 @@
          "../tests/file-system.sibilant")
 
 (export File-system)
+(export File)
