@@ -24,7 +24,9 @@
                  (pipe  ...@body) ))
 (include "./tree-map"
          "./file-system"
-         "../tests/file-system.sibilant")
+
+         ;;"../tests/file-system.sibilant"
+         )
 
 (export File-system)
 (export File)
