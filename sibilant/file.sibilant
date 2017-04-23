@@ -1,5 +1,5 @@
 
-(specify File (exten FS-node))
+(specify File (extend FS-node))
 
 (describe File
 
