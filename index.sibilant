@@ -2,5 +2,6 @@
 (include "kit/header")
 
 (import-namespace kit)
+(include "./sib/util.sibilant")
 
 (include "./sibilant/index.sibilant")
